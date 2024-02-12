@@ -1,4 +1,5 @@
 ﻿#region Usings
+using AdminLab.Ants;
 using Application.Common.Constants;
 using Application.Interfaces;
 using Application.Services;
@@ -106,6 +107,13 @@ public static class Startup
         builder.Services.AddScoped<IIdentityService, IdentityService>();
 
         #endregion
+
+        #region Lab
+
+        var dbContext = builder.Services.BuildServiceProvider().GetService<ApplicationDbContext>();
+        DatabaseContextInitializer<ApplicationDbContext>.Initialize(dbContext);
+
+        #endregion
     }
 
     public static void AddMiddleware(this WebApplication app)
@@ -120,6 +128,10 @@ public static class Startup
         app.UseHttpsRedirection();
         app.UseAuthentication();
         app.UseAuthorization();
+
+        app.MapControllerRoute(
+            name: "areaRoute",
+            pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
         app.MapControllers();
         SeedDatabase(app);

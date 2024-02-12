@@ -1,4 +1,5 @@
-﻿using Domain.Entities.Identity;
+﻿using Domain.Entities;
+using Domain.Entities.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,7 +8,7 @@ public class ApplicationDbContext (DbContextOptions<ApplicationDbContext> option
     : IdentityDbContext<ApplicationUser>(options)
 {
     // Your dbsets here
-
+    public DbSet<Fruit> Fruits { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         // Your configurations here
