@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Infrastructure.Data;
-using AdminLab.Models;
+using Microsoft.AspNetCore.Identity;
 using AdminLab.Controllers;
 
 namespace AdminLab.Areas.LazyCat.Controllers;

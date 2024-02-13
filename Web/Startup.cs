@@ -110,6 +110,8 @@ public static class Startup
 
         #region Lab
 
+        builder.Services.AddControllersWithViews();
+
         var dbContext = builder.Services.BuildServiceProvider().GetService<ApplicationDbContext>();
         DatabaseContextInitializer<ApplicationDbContext>.Initialize(dbContext);
 

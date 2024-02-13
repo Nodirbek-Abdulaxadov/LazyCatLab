@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240105201043_Initial")]
+    [Migration("20240213082728_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -20,10 +20,85 @@ namespace Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "8.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Domain.Entities.Fruit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Color")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Taste")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Fruits");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Color = "Red",
+                            Name = "Apple",
+                            Taste = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Color = "Yellow",
+                            Name = "Banana",
+                            Taste = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Color = "Yellow",
+                            Name = "Lemon",
+                            Taste = 2
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Color = "Green",
+                            Name = "Lime",
+                            Taste = 2
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Color = "Orange",
+                            Name = "Orange",
+                            Taste = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Color = "Yellow",
+                            Name = "Pineapple",
+                            Taste = 1
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Color = "Red",
+                            Name = "Strawberry",
+                            Taste = 1
+                        });
+                });
 
             modelBuilder.Entity("Domain.Entities.Identity.ApplicationUser", b =>
                 {

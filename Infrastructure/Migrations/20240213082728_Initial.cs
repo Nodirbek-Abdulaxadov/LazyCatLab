@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
@@ -50,6 +52,21 @@ namespace Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Fruits",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Color = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Taste = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Fruits", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -158,6 +175,20 @@ namespace Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "Fruits",
+                columns: new[] { "Id", "Color", "Name", "Taste" },
+                values: new object[,]
+                {
+                    { 1, "Red", "Apple", 1 },
+                    { 2, "Yellow", "Banana", 1 },
+                    { 3, "Yellow", "Lemon", 2 },
+                    { 4, "Green", "Lime", 2 },
+                    { 5, "Orange", "Orange", 1 },
+                    { 6, "Yellow", "Pineapple", 1 },
+                    { 7, "Red", "Strawberry", 1 }
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -215,6 +246,9 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "AspNetUserTokens");
+
+            migrationBuilder.DropTable(
+                name: "Fruits");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AdminLab.Views;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.VisualBasic;
 using System.Text;
@@ -16,8 +17,9 @@ public class DatabaseContextInitializer<T> where T : DbContext
                                    .Where(x => !x.ClrType.IsGenericType)
                                    .ToList();
         CreateLazyCatArea();
-        //CreateModelClasses();
+        CreateLayout();
         CreateControllers();
+        CreateIndexViews();
     }
 
     private static void CreateLazyCatArea()
@@ -61,116 +63,6 @@ public class DatabaseContextInitializer<T> where T : DbContext
         Console.WriteLine("LazyCat area created successfully.");
     }
 
-    private static void CreateModelClasses()
-    {
-        foreach (var model in entityTypes)
-        {
-            //if model is not generic
-            if (model.ClrType.IsGenericType) continue;
-            
-            CreateModelClass(model);
-        }
-    }
-
-    private static void CreateModelClass(IEntityType entityType)
-    {
-
-        var modelClass = new StringBuilder();
-        modelClass.AppendLine("using System;");
-        modelClass.AppendLine("using System.Collections.Generic;");
-        modelClass.AppendLine("using System.ComponentModel.DataAnnotations;");
-        modelClass.AppendLine("using System.ComponentModel.DataAnnotations.Schema;");
-        modelClass.AppendLine("using AdminLab.Models.Enums;");
-        modelClass.AppendLine();
-        modelClass.AppendLine("namespace AdminLab.Models;");
-        modelClass.AppendLine($"public class {entityType.DisplayName()}");
-        modelClass.AppendLine("{");
-        foreach (var property in entityType.GetProperties())
-        {
-            if (property.ClrType.IsEnum)
-            {
-                CreateEnumClass(property);
-                if (property.IsNullable)
-                {
-                    modelClass.AppendLine($"    public {property.ClrType.Name}? {property.Name} {{ get; set; }}");
-                }
-                else
-                {
-                    modelClass.AppendLine($"    public {property.ClrType.Name} {property.Name} {{ get; set; }}");
-                }
-            }
-            else
-            {
-                if (property.IsNullable)
-                {
-                    if (property.ClrType.Name.Contains("Nullable"))
-                    {
-                        modelClass.AppendLine($"    public DateTimeOffset? {property.Name} {{ get; set; }}");
-                    }
-                    else
-                    {
-                        modelClass.AppendLine($"    public {property.ClrType.Name}? {property.Name} {{ get; set; }}");
-                    }
-                }
-                else
-                {
-                    if (property.ClrType.Name.Contains("Nullable"))
-                    {
-                        modelClass.AppendLine($"    public DateTimeOffset {property.Name} {{ get; set; }}");
-                    }
-                    else
-                    {
-                        modelClass.AppendLine($"    public {property.ClrType.Name} {property.Name} {{ get; set; }}");
-                    }
-                }
-            }
-        }
-        modelClass.AppendLine("}");
-
-        var modelsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Areas", "LazyCat", "Models");
-
-        var modelClassPath = Path.Combine(modelsFolder, $"{entityType.DisplayName()}.cs");
-        if (!File.Exists(modelClassPath))
-        {
-            File.WriteAllText(modelClassPath, modelClass.ToString());
-        }
-
-        Console.WriteLine($"Model class {entityType.DisplayName()} created successfully.");
-    }
-
-    private static void CreateEnumClass(IProperty property)
-    {
-        var enumClass = new StringBuilder();
-        enumClass.AppendLine("using System;");
-        enumClass.AppendLine("using System.Collections.Generic;");
-        enumClass.AppendLine("using System.ComponentModel.DataAnnotations;");
-        enumClass.AppendLine("using System.ComponentModel.DataAnnotations.Schema;");
-        enumClass.AppendLine();
-        enumClass.AppendLine("namespace AdminLab.Models.Enums;");
-        enumClass.AppendLine($"public enum {property.Name}");
-        enumClass.AppendLine("{");
-        foreach (var value in Enum.GetValues(property.ClrType))
-        {
-            enumClass.AppendLine($"    {value},");
-        }
-        enumClass.AppendLine("}");
-
-        var modelsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Areas", "LazyCat", "Models", "Enums");
-
-        if (!Directory.Exists(modelsFolder))
-        {
-            Directory.CreateDirectory(modelsFolder);
-        }
-
-        var enumClassPath = Path.Combine(modelsFolder, $"{property.Name}.cs");
-        if (!File.Exists(enumClassPath))
-        {
-            File.WriteAllText(enumClassPath, enumClass.ToString());
-        }
-
-        Console.WriteLine($"Enum class {property.Name} created successfully.");
-    }
-
     private static void CreateControllers()
     {
         foreach (var model in entityTypes)
@@ -184,7 +76,7 @@ public class DatabaseContextInitializer<T> where T : DbContext
         var controllerClass = new StringBuilder();
         controllerClass.AppendLine("using Microsoft.AspNetCore.Mvc;");
         controllerClass.AppendLine($"using {typeof(T).Namespace};");
-        controllerClass.AppendLine($"using AdminLab.Models;");
+        controllerClass.AppendLine($"using {model.ClrType.Namespace};");
         controllerClass.AppendLine("using AdminLab.Controllers;");
         controllerClass.AppendLine();
         controllerClass.AppendLine("namespace AdminLab.Areas.LazyCat.Controllers;");
@@ -209,5 +101,59 @@ public class DatabaseContextInitializer<T> where T : DbContext
         }
 
         Console.WriteLine($"Controller class {model.DisplayName()}Controller created successfully.");
+    }
+
+    private static void CreateLayout()
+    {
+        var models = entityTypes.Select(x => x.DisplayName()).ToList();
+        var layout = BaseViews.Layout(models);
+        var layoutPath = Path.Combine(Directory.GetCurrentDirectory(), "Areas", "LazyCat", "Views", "Shared", "_Layout.cshtml");
+
+        if (!File.Exists(layoutPath))
+        {
+            File.WriteAllText(layoutPath, layout);
+        }
+
+        Console.WriteLine("Layout created successfully.");
+
+        var viewImports = BaseViews.ViewImports(entityTypes.Select(x => x.ClrType.Namespace).ToList());
+        var viewImportsPath = Path.Combine(Directory.GetCurrentDirectory(), "Areas", "LazyCat", "Views", "_ViewImports.cshtml");
+
+        if (!File.Exists(viewImportsPath))
+        {
+            File.WriteAllText(viewImportsPath, viewImports);
+        }
+
+        Console.WriteLine("View imports created successfully.");
+
+        var viewStart = BaseViews.ViewStart();
+        var viewStartPath = Path.Combine(Directory.GetCurrentDirectory(), "Areas", "LazyCat", "Views", "_ViewStart.cshtml");
+
+        if (!File.Exists(viewStartPath))
+        {
+            File.WriteAllText(viewStartPath, viewStart);
+        }
+
+        Console.WriteLine("View imports and view start created successfully.");
+    }
+
+    private static void CreateIndexViews()
+    {
+        foreach (var model in entityTypes)
+        {
+            var index = BaseViews.CreateIndexView(model);
+
+            var modelsFolder = Path.Combine(Directory.GetCurrentDirectory(), "Areas", "LazyCat", "Views", model.DisplayName());
+            if (!Directory.Exists(modelsFolder))
+            {
+                Directory.CreateDirectory(modelsFolder);
+            }
+
+            var indexPath = Path.Combine(modelsFolder, "Index.cshtml");
+            if (!File.Exists(indexPath))
+            {
+                File.WriteAllText(indexPath, index);
+            }
+        }
     }
 }
